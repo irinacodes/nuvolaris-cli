@@ -62,17 +62,10 @@ func configKind() (*KindConfig, error) {
 
 func (config *KindConfig) manageKindCluster(logger *Logger, action string) error {
 
-	switch action {
-	case "create":
-		if err := config.createCluster(logger); err != nil {
-			return err
-		}
-	case "destroy":
-		if err := config.destroyCluster(); err != nil {
-			return err
-		}
-	default:
-		fmt.Println("did you mean nuv devcluster create/destroy?")
+	if action == "create" {
+		return config.createCluster(logger)
+	} else if action == "destroy" {
+		return config.destroyCluster()
 	}
 	return nil
 }

@@ -17,14 +17,45 @@
 //
 package main
 
-type DevClusterCmd struct {
-	Action string `arg:"" name:"action" required:"" enum:"create,destroy" help:"create/destroy" type:"string"`
-}
+import (
+	"bytes"
+	"io"
+	"os"
+	"path"
+	"strings"
+)
 
-func (devClusterCmd *DevClusterCmd) Run(logger *Logger) error {
-	config, err := configKind()
+func embedSecrets(cmd *SecretsCmd) error {
+	workingDir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	return config.manageKindCluster(logger, devClusterCmd.Action)
+	originalFilePath := path.Join(workingDir, cmd.OriginalFileName)
+	buf := bytes.NewBuffer(nil)
+	in, err := os.Open(originalFilePath)
+	if err != nil {
+		return err
+	}
+	io.Copy(buf, in)
+	in.Close()
+
+	originalContent := string(buf.Bytes())
+	wskPropsMap, err := readWskPropsAsMap()
+	if err != nil {
+		return err
+	}
+	replacedContent := originalContent
+	for k, v := range wskPropsMap {
+		replacedContent = strings.ReplaceAll(replacedContent, "@"+k+"@", v)
+	}
+	replacedFilePath := path.Join(workingDir, cmd.ProcessedFileName)
+	out, err := os.Create(replacedFilePath)
+	if err != nil {
+		return err
+	}
+	_, err = out.WriteString(replacedContent)
+	if err != nil {
+		return err
+	}
+	return out.Close()
 }

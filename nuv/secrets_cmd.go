@@ -17,6 +17,11 @@
 //
 package main
 
-type DestroyCmd struct {
-	Args []string `optional:"" name:"args" help:"destroy nuvolaris cluster"`
+type SecretsCmd struct {
+	OriginalFileName  string `arg:"" name:"originalFileName" required:"" help:"the name of the file in which to embed secrets" type:"string"`
+	ProcessedFileName string `arg:"" name:"processedFileName" required:"" help:"the name of the file with embedded secrets" type:"string"`
+}
+
+func (s *SecretsCmd) Run() error {
+	return embedSecrets(s)
 }
